@@ -1,8 +1,10 @@
 #! /usr/bin/python
 # Finds if there are any images not associated with a proposal (should not
 # happen under normal circumstances).
-import cpssdb
 import sys
+sys.path.append(sys.path[0] + '/../db')
+
+import cpssdb
 
 def start():
     Database = cpssdb.cpssdb()

@@ -1,7 +1,9 @@
 #! /usr/bin/python
 # Find all proposals by a particular user.
-import cpssdb
 import sys
+sys.path.append(sys.path[0] + '/../db')
+
+import cpssdb
 
 def start(emails):
     string = "IN('" + "', '".join(emails) + "')"

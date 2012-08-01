@@ -1,7 +1,9 @@
 #! /usr/bin/python
-import cpssdb
 import sys
+sys.path.append(sys.path[0] + '/../db')
+
 import hashlib
+import cpssdb
 
 db = None
 

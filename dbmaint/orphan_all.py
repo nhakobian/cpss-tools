@@ -1,10 +1,10 @@
 #! /usr/bin/python
 # Checks to see if there are any orphaned proposals (proposals whose user
 # is not registered with the system).
-import cpssdb
-import md5
 import sys
+sys.path.append(sys.path[0] + '/../db')
 
+import cpssdb
 
 def start():
     Database = cpssdb.cpssdb()

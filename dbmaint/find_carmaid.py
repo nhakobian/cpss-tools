@@ -1,8 +1,9 @@
 #! /usr/bin/python
 # Display information about a particular CARMA proposal id.
+import sys
+sys.path.append(sys.path[0] + '/../db')
 
 import cpssdb
-import sys
 
 def start(carmaid):
     Database = cpssdb.cpssdb()

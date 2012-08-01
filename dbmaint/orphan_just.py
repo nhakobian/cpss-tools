@@ -1,8 +1,10 @@
 #! /usr/bin/python
 # Checks to see if there are any uploaded justifications not associated with
 # a proposal (should not occur under normal circumstances).
-import cpssdb
 import sys
+sys.path.append(sys.path[0] + '/../db')
+
+import cpssdb
 import os
 
 def start():
