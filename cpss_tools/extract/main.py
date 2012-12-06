@@ -28,24 +28,20 @@ class extract(object):
         # Pass proposal info to each routine. They can call the correct
         # subfunctions to grab each set of data as needed.
 
-        #self.authors_extract(proposals)
-        # export
-        #self.obsblock_extract(proposals)
-        #self.password_extract(proposals)
-        #self.pdf_extract(proposals)
-        #self.proposal_extract(proposals)
-        pass
+        self.authors_extract(proposals)
+        self.xml_extract(proposals)
+        self.obsblock_extract(proposals)
+        self.password_extract(proposals)
+        self.pdf_extract(proposals)
+        self.proposal_extract(proposals)
     
-    def xml_extract(self, cycle_type, start, end):
-        pass
-
-    def obsblock_extract(self, proposals):
-        # PI information by proposal
-        pis = {}
+    def xml_extract(self, proposals):
+        # author information by proposal
+        authors = {}
         for prop in proposals:
-            authors = self.db.authors_by_proposal(prop['author'], 
+            aut = self.db.authors_by_proposal(prop['author'], 
                                                   prop['proposalid'])
-            pis[prop['carmaid']] = authors[0]
+            authors[prop['carmaid']] = aut
 
         # Extract propinfo sorted by proposal
         propinfo = {}
@@ -54,6 +50,95 @@ class extract(object):
                                                     prop['proposalid'])
             propinfo[prop['carmaid']] = info
 
+        sources = self.sourceinfo(proposals)
+
+        output = open('export.xml', 'w')
+        output_strip = open('export_stripped.xml', 'w')
+
+        for prop in proposals:
+            pi_data = authors[prop['carmaid']][0]
+            aut_data = authors[prop['carmaid']][1:]
+            prop_data = propinfo[prop['carmaid']]
+            source_data = sources[prop['carmaid']]
+
+            nois = len(aut_data)
+
+            PI = common.PITemplate.substitute(name=pi_data['name'], 
+                   email=pi_data['email'], affil=pi_data['institution'], 
+                   us=inst.isus(pi_data['institution']))
+
+            CoIs = ""
+            for coi in aut_data:
+                CoIs += common.CoITemplate.substitute(name=coi['name'], 
+                          email=coi['email'], affil=coi['institution'], 
+                          us=inst.isus(coi['institution']))
+    
+            Obsblocks = ""
+            for source in source_data:
+                if source['imaging'] == 'Imaging':
+                    imgsnr = 'IMG'
+                elif source['imaging'] == 'SNR':
+                    imgsnr = 'SNR'
+                else:
+                    imgsnr = ''
+
+                prop['frequency_band'] = ''
+            
+                Obsblocks += common.ObsblockTemplate.substitute(
+                    obsblock = source['obsblock'],
+                    frequency_band = prop['frequency_band'],
+                    array_config = source['config'],
+                    fill = source['flexha'],
+                    numb_fields = source['numb_fields'],
+                    species = source['species'],
+                    name = source['name'],
+                    ra = source['ra'],
+                    dec = source['dec'],
+                    self_cal = source['self_cal'],
+                    rest_frequency = source['corr_frequency'],
+                    observation_type = source['observation_type'],
+                    imgvssnr = imgsnr,
+                    )
+
+            # Grab and filter the abstract
+            prop_data['abstract'] = prop_data['abstract'].replace('\n', ' ')
+            prop_data['abstract'] = prop_data['abstract'].replace('\r', '')
+            prop_data['abstract'] = prop_data['abstract'].replace('\\', '\\\\')
+            prop_data['abstract'] = prop_data['abstract'].replace('$', '\$')
+            prop_data['abstract'] = prop_data['abstract'].replace('"', '\\"')
+            prop_data['abstract'] = prop_data['abstract'].replace("'", "\\'")
+
+            xml_proposal = common.XMLTemplate.substitute(
+                carmaid = prop['carmaid'],
+                term = prop['cyclename'],
+                title = prop_data['title'],
+                nois = nois,
+                PI = PI,
+                CoIs = CoIs,
+                key_project = prop_data['key_project'],
+                toe = prop_data['toe'],
+                scientific_category=common.category_map[prop_data['scientific_category']],
+                abstract = prop_data['abstract'],
+                Obsblocks = Obsblocks)
+            
+            xml_strip = xml_proposal.replace('\n', '')
+            xml_strip = xml_strip.replace('>  <', '><')
+            xml_strip = xml_strip.replace('>    <', '><')
+            xml_strip = xml_strip.replace('>      <', '><')
+            xml_strip = xml_strip.replace('>        <', '><')
+            xml_strip = xml_strip.replace('>          <', '><')
+            xml_strip = xml_strip.replace('>            <', '><')
+
+            output.write(xml_proposal)
+            output_strip.write(xml_strip)
+            output_strip.write('\n')
+
+        output.close()
+        output_strip.close()
+
+        print "Exported XML data from %s proposals." % len(proposals)
+    
+    def sourceinfo(self, proposals):
         # Extract sourceinfo with obsblockname
         sources = {}
         for prop in proposals:
@@ -110,6 +195,24 @@ class extract(object):
                     tmp['obsblock'] = common.obsblockgen(tmp['numb'], 
                       tmp['config'], tmp['corr_frequency'], tmp['name'])
                     sources[prop['carmaid']].append(tmp)
+        return sources
+
+    def obsblock_extract(self, proposals):
+        # PI information by proposal
+        pis = {}
+        for prop in proposals:
+            authors = self.db.authors_by_proposal(prop['author'], 
+                                                  prop['proposalid'])
+            pis[prop['carmaid']] = authors[0]
+
+        # Extract propinfo sorted by proposal
+        propinfo = {}
+        for prop in proposals:
+            info = self.db.propinfo_by_proposal(prop['proposal'],
+                                                    prop['proposalid'])
+            propinfo[prop['carmaid']] = info
+
+        sources = self.sourceinfo(proposals)
     
         output = open('obsblocks.csv', 'w')
         output.write("""\"Carma ID","Obsblock Name","Title","Date","PI Name","PI E-mail","PI Institution","Target of Opportunity","Scientific Category","Help Required","Source Name","RA","DEC","Frequency of Observation","Array","Hours Requested","Observation Type","Number of Mosaic Fields","Species or Transition Name","Can Self-Calibrate","Imag/SNR","Flexible Hour Angle\"\n""")

@@ -24,7 +24,7 @@ except ImportError:
 
 category_map = { 
     #'' : 'GALACTIC',
-    #'' : 'COMET',
+    'Cometary'                        : 'COMET',
     #'' : 'EXTRAGALACTIC'
     #'' : 'OTHER',
     'Planetary'                       : 'PLANET',
