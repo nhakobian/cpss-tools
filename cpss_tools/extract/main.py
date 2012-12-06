@@ -30,7 +30,7 @@ class extract(object):
 
         #self.authors_extract(proposals)
         # export
-        # obsblock
+        #self.obsblock_extract(proposals)
         #self.password_extract(proposals)
         #self.pdf_extract(proposals)
         #self.proposal_extract(proposals)
@@ -38,6 +38,105 @@ class extract(object):
     
     def xml_extract(self, cycle_type, start, end):
         pass
+
+    def obsblock_extract(self, proposals):
+        # PI information by proposal
+        pis = {}
+        for prop in proposals:
+            authors = self.db.authors_by_proposal(prop['author'], 
+                                                  prop['proposalid'])
+            pis[prop['carmaid']] = authors[0]
+
+        # Extract propinfo sorted by proposal
+        propinfo = {}
+        for prop in proposals:
+            info = self.db.propinfo_by_proposal(prop['proposal'],
+                                                    prop['proposalid'])
+            propinfo[prop['carmaid']] = info
+
+        # Extract sourceinfo with obsblockname
+        sources = {}
+        for prop in proposals:
+            sources[prop['carmaid']] = []
+            sinfo = self.db.sources_by_proposal(prop['source'],
+                                                  prop['proposalid'])
+            for s in sinfo:
+                if (s['hrs_a'] != '0') and (s['hrs_a'] != None):
+                    tmp = s.copy()
+                    tmp['config'] = 'A'
+                    tmp['hours'] = s['hrs_a']
+                    tmp['obsblock'] = common.obsblockgen(tmp['numb'], 
+                      tmp['config'], tmp['corr_frequency'], tmp['name'])
+                    sources[prop['carmaid']].append(tmp)
+                if (s['hrs_b'] != '0') and (s['hrs_b'] != None):
+                    tmp = s.copy()
+                    tmp['config'] = 'B'
+                    tmp['hours'] = s['hrs_b']
+                    tmp['obsblock'] = common.obsblockgen(tmp['numb'], 
+                      tmp['config'], tmp['corr_frequency'], tmp['name'])
+                    sources[prop['carmaid']].append(tmp)
+                if (s['hrs_c'] != '0') and (s['hrs_c'] != None):
+                    tmp = s.copy()
+                    tmp['config'] = 'C'
+                    tmp['hours'] = s['hrs_c']
+                    tmp['obsblock'] = common.obsblockgen(tmp['numb'], 
+                      tmp['config'], tmp['corr_frequency'], tmp['name'])
+                    sources[prop['carmaid']].append(tmp)
+                if (s['hrs_d'] != '0') and (s['hrs_d'] != None):
+                    tmp = s.copy()
+                    tmp['config'] = 'D'
+                    tmp['hours'] = s['hrs_d']
+                    tmp['obsblock'] = common.obsblockgen(tmp['numb'], 
+                      tmp['config'], tmp['corr_frequency'], tmp['name'])
+                    sources[prop['carmaid']].append(tmp)
+                if (s['hrs_e'] != '0') and (s['hrs_e'] != None):
+                    tmp = s.copy()
+                    tmp['config'] = 'E'
+                    tmp['hours'] = s['hrs_e']
+                    tmp['obsblock'] = common.obsblockgen(tmp['numb'], 
+                      tmp['config'], tmp['corr_frequency'], tmp['name'])
+                    sources[prop['carmaid']].append(tmp)
+                if (s['hrs_sh'] != '0') and (s['hrs_sh'] != None):
+                    tmp = s.copy()
+                    tmp['config'] = 'SH'
+                    tmp['hours'] = s['hrs_sh']
+                    tmp['obsblock'] = common.obsblockgen(tmp['numb'], 
+                      tmp['config'], tmp['corr_frequency'], tmp['name'])
+                    sources[prop['carmaid']].append(tmp)
+                if (s['hrs_sl'] != '0') and (s['hrs_sl'] != None):
+                    tmp = s.copy()
+                    tmp['config'] = 'SL'
+                    tmp['hours'] = s['hrs_sl']
+                    tmp['obsblock'] = common.obsblockgen(tmp['numb'], 
+                      tmp['config'], tmp['corr_frequency'], tmp['name'])
+                    sources[prop['carmaid']].append(tmp)
+    
+        output = open('obsblocks.csv', 'w')
+        output.write("""\"Carma ID","Obsblock Name","Title","Date","PI Name","PI E-mail","PI Institution","Target of Opportunity","Scientific Category","Help Required","Source Name","RA","DEC","Frequency of Observation","Array","Hours Requested","Observation Type","Number of Mosaic Fields","Species or Transition Name","Can Self-Calibrate","Imag/SNR","Flexible Hour Angle\"\n""")
+
+        for prop in proposals:
+            tpi = pis[prop['carmaid']]
+            tpropinfo = propinfo[prop['carmaid']]
+            tsources = sources[prop['carmaid']]
+            
+            for s in tsources:
+                tmp = [prop['carmaid'], s['obsblock'], tpropinfo['title'],
+                       tpropinfo['date'], tpi['name'], tpi['email'], 
+                       tpi['institution'], tpropinfo['toe'], 
+                       tpropinfo['scientific_category'], 
+                       tpropinfo['help_required'], s['name'], s['ra'], 
+                       s['dec'], s['corr_frequency'], s['config'], s['hours'],
+                       s['observation_type'], s['numb_fields'], s['species'], 
+                       s['self_cal'], s['imaging'], s['flexha']]
+
+                for i in xrange(len(tmp)):
+                    tmp[i] = """\"%s\"""" % tmp[i]
+
+                output.write(','.join(tmp))
+                output.write('\n')
+        
+        output.close()
+        print "Extracted obsblock info for %s proposals." % len(proposals)
 
     def proposal_extract(self, proposals):
         # PI information by proposal
