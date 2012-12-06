@@ -58,3 +58,28 @@ class cpssdb():
         cursor.close()
         return res
 
+    def propinfo_by_proposal(self, table, proposalid):
+        cursor = self.dictcursor()
+
+        cursor.execute("""SELECT *
+                          FROM %(table)s
+                          WHERE `proposalid`=%(prop)s
+                          LIMIT 1""" %
+                       { 'table' : table,
+                         'prop'  : self.literal(proposalid)})
+        res = cursor.fetchone()
+        cursor.close()
+        return res
+
+    def sources_by_proposal(self, table, proposalid):
+        cursor = self.dictcursor()
+
+        cursor.execute("""SELECT *
+                          FROM %(table)s
+                          WHERE `proposalid`=%(prop)s
+                          ORDER BY `numb`""" %
+                       { 'table' : table,
+                         'prop'  : self.literal(proposalid)})
+        res = cursor.fetchall()
+        cursor.close()
+        return res
