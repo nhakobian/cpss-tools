@@ -19,6 +19,7 @@ class cpssdb():
                                  unix_socket = dbconfig.unix_socket)           
         self.db = db
         self.literal = self.db.literal
+        self.filedir = dbconfig.data_dir
 
     def dictcursor(self):
         return self.db.cursor(cursorclass=MySQLdb.cursors.DictCursor)
@@ -42,4 +43,17 @@ class cpssdb():
         res = cursor.fetchall()
         cursor.close()
 
+        return res
+
+    def authors_by_proposal(self, table, proposalid):
+        cursor = self.dictcursor()
+
+        cursor.execute("""SELECT *
+                          FROM %(table)s
+                          WHERE `proposalid`=%(prop)s
+                          ORDER BY `numb`""" %
+                       { 'table' : table,
+                         'prop'  : self.literal(proposalid)})
+        res = cursor.fetchall()
+        cursor.close()
         return res
