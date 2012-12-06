@@ -31,7 +31,7 @@ class extract(object):
         self.authors_extract(proposals)
         # export
         # obsblock
-        # password
+        self.password_extract(proposals)
         self.pdf_extract(proposals)
         # proposal
         pass
@@ -39,6 +39,16 @@ class extract(object):
     def xml_extract(self, cycle_type, start, end):
         pass
         
+    def password_extract(self, proposals):
+        output = open('./password.xml', 'w')
+
+        for prop in proposals:
+            output.write("<projectID>" + prop['carmaid'] + 
+                         "</projectID><passWord>" + prop['carmapw'] + 
+                         "</passWord>\n")
+        output.close()
+        print "Extracted passwords for %s proposals." % len(proposals)
+
     def pdf_extract(self, proposals):
         pdfdir = self.db.filedir + '/pdf/'
         for prop in proposals:

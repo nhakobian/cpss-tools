@@ -57,3 +57,4 @@ class cpssdb():
         res = cursor.fetchall()
         cursor.close()
         return res
+
