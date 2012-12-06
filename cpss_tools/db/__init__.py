@@ -18,6 +18,7 @@ class cpssdb():
                                  db = dbconfig.database,
                                  unix_socket = dbconfig.unix_socket)           
         self.db = db
+        self.literal = self.db.literal
 
     def dictcursor(self):
         return self.db.cursor(cursorclass=MySQLdb.cursors.DictCursor)
@@ -27,3 +28,18 @@ class cpssdb():
 
     def close(self):
         return self.db.close()
+
+    def proposals_by_cyclename(self, cyclename):
+        cursor = self.dictcursor()
+        
+        cursor.execute("""SELECT * 
+                          FROM `proposals`, `cycles`
+                          WHERE `proposals`.`cyclename`=`cycles`.`cyclename`
+                          AND `proposals`.`cyclename`=%(cyclename)s
+                          AND `proposals`.`carmaid` IS NOT NULL
+                          ORDER BY `proposals`.`carmaid`""" %
+                       {'cyclename' : self.literal(cyclename)})
+        res = cursor.fetchall()
+        cursor.close()
+
+        return res

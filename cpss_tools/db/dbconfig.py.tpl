@@ -12,3 +12,4 @@ user        = ''
 password    = ''
 database    = ''
 unix_socket = None
+data_dir    = ''
